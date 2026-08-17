@@ -76,7 +76,10 @@ function getTodaysThree(pool, slotOffset, day) {
   const n = pool.length;
   const startIdx = (day + slotOffset) % n;
   const picks = [];
-  for (let i = 0; i < 3; i++) picks.push(pool[(startIdx + i * 3) % n]);
+  for (let i = 0; i < 3; i++) {
+    const idx = (startIdx + i * 3) % n;
+    picks.push({ ...pool[idx], _originalIndex: idx });
+  }
   return picks;
 }
 
@@ -123,54 +126,82 @@ function duaCardHTML(dua) {
   </div>`;
 }
 
+// Surah:Ayat reference se asli recitation audio ka URL banata hai
+// (Mishary Alafasy ki recitation, everyayah.com se — free, koi login nahi chahiye)
+function getAudioUrl(ref) {
+  if (!ref || ref === "hadees") return null;
+  const match = ref.match(/^(\d+):(\d+)/); // pehli ayat leta hai agar range ho (jaise 14:40-41)
+  if (!match) return null;
+  const surah = match[1].padStart(3, "0");
+  const ayah = match[2].padStart(3, "0");
+  return `https://everyayah.com/data/Alafasy_128kbps/${surah}${ayah}.mp3`;
+}
+
+let currentAudio = null;
+
 function togglePlay(btn, duaId) {
   const wrap = btn.closest(".dua-card").querySelector(".progress-wrap");
+  const bar = wrap.querySelector(".progress-bar");
 
-  // agar already bol raha hai, toh rok do
+  // agar already chal raha hai, toh rok do
   if (btn.classList.contains("playing")) {
-    window.speechSynthesis.cancel();
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
     btn.classList.remove("playing");
     btn.textContent = "▶";
     wrap.style.display = "none";
     return;
   }
 
-  // koi aur dua bol rahi ho toh use pehle rok do
-  window.speechSynthesis.cancel();
+  // koi aur dua chal rahi ho toh use pehle rok do
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
   document.querySelectorAll(".play-btn.playing").forEach((b) => {
     b.classList.remove("playing");
     b.textContent = "▶";
+    b.closest(".dua-card").querySelector(".progress-wrap").style.display = "none";
   });
-
-  if (!("speechSynthesis" in window)) {
-    alert("Maaf kijiye, iss browser mein awaaz sunne ka feature support nahi hai.");
-    return;
-  }
 
   const dua = allDuasFlat().find((d) => d.id === duaId);
   if (!dua) return;
 
+  const url = getAudioUrl(dua.ref);
+  if (!url) {
+    alert("Maaf kijiye, is dua ki audio abhi available nahi hai.");
+    return;
+  }
+
   btn.classList.add("playing");
   btn.textContent = "❚❚";
   wrap.style.display = "block";
-  wrap.querySelector(".progress-bar").style.width = "100%";
+  bar.style.width = "0%";
 
-  const utterance = new SpeechSynthesisUtterance(dua.ar);
-  utterance.lang = "ar-SA";
-  utterance.rate = 0.8;
+  const audio = new Audio(url);
+  currentAudio = audio;
 
-  utterance.onend = () => {
+  audio.ontimeupdate = () => {
+    if (audio.duration) {
+      bar.style.width = (audio.currentTime / audio.duration) * 100 + "%";
+    }
+  };
+  audio.onended = () => {
     btn.classList.remove("playing");
     btn.textContent = "▶";
     wrap.style.display = "none";
+    bar.style.width = "0%";
+    currentAudio = null;
   };
-  utterance.onerror = () => {
+  audio.onerror = () => {
     btn.classList.remove("playing");
     btn.textContent = "▶";
     wrap.style.display = "none";
+    currentAudio = null;
+    alert("Audio load nahi ho payi. Internet connection check karein.");
   };
 
-  window.speechSynthesis.speak(utterance);
+  audio.play().catch(() => {
+    btn.classList.remove("playing");
+    btn.textContent = "▶";
+    wrap.style.display = "none";
+  });
 }
 
 function toggleShare(btn) {
@@ -317,9 +348,9 @@ function renderMainContent() {
   const day = getDayOfYear(state.dayOffset);
   const slotOffsets = { subah: 0, shaam: 3, raat: 6 };
   const pool = POOLS[state.activeSlot];
-  const todaysSet = getTodaysThree(pool, slotOffsets[state.activeSlot], day).map((d, i) => ({
+  const todaysSet = getTodaysThree(pool, slotOffsets[state.activeSlot], day).map((d) => ({
     ...d,
-    id: `${state.activeSlot}-${d.tag}-${i}`,
+    id: `${state.activeSlot}-${d.tag}-${d._originalIndex}`,
   }));
   container.innerHTML = todaysSet.map(duaCardHTML).join("");
 }
