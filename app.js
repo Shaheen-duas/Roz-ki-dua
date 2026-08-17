@@ -126,20 +126,26 @@ function duaCardHTML(dua) {
   </div>`;
 }
 
-// Surah:Ayat reference se asli recitation audio ka URL banata hai
-// (Mishary Alafasy ki recitation, everyayah.com se — poora Quran, free)
-function getAudioUrl(ref) {
+// Surah:Ayat reference se asli recitation audio ka URL nikaalta hai
+// (alquran.cloud API — Mishary Alafasy ki recitation, poora Quran cover karta hai)
+async function getAudioUrl(ref) {
   if (!ref || ref === "hadees") return null;
   const match = ref.match(/^(\d+):(\d+)/); // pehli ayat leta hai agar range ho (jaise 14:40-41)
   if (!match) return null;
-  const surah = match[1].padStart(3, "0");
-  const ayah = match[2].padStart(3, "0");
-  return `https://everyayah.com/data/Alafasy_128kbps/${surah}${ayah}.mp3`;
+  const surah = match[1];
+  const ayah = match[2];
+  try {
+    const res = await fetch(`https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/ar.alafasy`);
+    const json = await res.json();
+    return json && json.data && json.data.audio ? json.data.audio : null;
+  } catch (e) {
+    return null;
+  }
 }
 
 let currentAudio = null;
 
-function togglePlay(btn, duaId) {
+async function togglePlay(btn, duaId) {
   const wrap = btn.closest(".dua-card").querySelector(".progress-wrap");
   const bar = wrap.querySelector(".progress-bar");
 
@@ -163,8 +169,11 @@ function togglePlay(btn, duaId) {
   const dua = allDuasFlat().find((d) => d.id === duaId);
   if (!dua) return;
 
-  const url = getAudioUrl(dua.ref);
+  // loading state dikhao jab tak audio link fetch ho raha hai
+  btn.textContent = "…";
+  const url = await getAudioUrl(dua.ref);
   if (!url) {
+    btn.textContent = "▶";
     alert("Maaf kijiye, is dua ki audio abhi available nahi hai.");
     return;
   }
