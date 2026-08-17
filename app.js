@@ -127,14 +127,14 @@ function duaCardHTML(dua) {
 }
 
 // Surah:Ayat reference se asli recitation audio ka URL banata hai
-// (Mishary Alafasy ki recitation, everyayah.com se — free, koi login nahi chahiye)
+// (Mishary Alafasy ki recitation — GitHub-hosted, free, reliable)
 function getAudioUrl(ref) {
   if (!ref || ref === "hadees") return null;
   const match = ref.match(/^(\d+):(\d+)/); // pehli ayat leta hai agar range ho (jaise 14:40-41)
   if (!match) return null;
-  const surah = match[1].padStart(3, "0");
-  const ayah = match[2].padStart(3, "0");
-  return `https://everyayah.com/data/Alafasy_128kbps/${surah}${ayah}.mp3`;
+  const surah = parseInt(match[1], 10);
+  const ayah = parseInt(match[2], 10);
+  return `https://the-quran-project.github.io/Quran-Audio/Data/1/${surah}_${ayah}.mp3`;
 }
 
 let currentAudio = null;
@@ -194,13 +194,14 @@ function togglePlay(btn, duaId) {
     btn.textContent = "▶";
     wrap.style.display = "none";
     currentAudio = null;
-    alert("Audio load nahi ho payi. Internet connection check karein.");
+    alert("Audio load nahi ho payi.\nURL: " + url + "\nInternet connection check karein.");
   };
 
-  audio.play().catch(() => {
+  audio.play().catch((err) => {
     btn.classList.remove("playing");
     btn.textContent = "▶";
     wrap.style.display = "none";
+    alert("Play nahi ho paya: " + err.message);
   });
 }
 
