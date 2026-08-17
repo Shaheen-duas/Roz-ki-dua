@@ -1,4 +1,4 @@
-const CACHE_NAME = "roz-ki-dua-v2";
+const CACHE_NAME = "roz-ki-dua-v3";
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
@@ -25,7 +25,20 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  // sirf apni site ki files ke liye cache use karo, bahar ki cheezein
+  // (jaise audio API) hamesha seedha internet se hi jaani chahiye
+  if (event.request.url.indexOf(self.location.origin) !== 0) {
+    return;
+  }
+  // network-first: pehle latest file internet se laane ki koshish karo,
+  // sirf tabhi purani (cached) file dikhao jab internet na ho
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    fetch(event.request)
+      .then((response) => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
