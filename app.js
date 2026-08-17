@@ -103,7 +103,7 @@ function duaCardHTML(dua) {
       <div class="dua-actions">
         <button class="icon-btn" onclick="toggleLike('${dua.id}')">${isLiked ? "❤️" : "🤍"}</button>
         <button class="icon-btn" style="color:${isSaved ? "#C9A15A" : "#B9AE93"}" onclick="toggleSave('${dua.id}')">${isSaved ? "🔖" : "📑"}</button>
-        <button class="play-btn" onclick="togglePlay(this)">▶</button>
+        <button class="play-btn" onclick="togglePlay(this, '${dua.id}')">▶</button>
         <button class="icon-btn" style="color:#7C6A46" onclick="toggleShare(this)">↗️</button>
       </div>
     </div>
@@ -123,37 +123,54 @@ function duaCardHTML(dua) {
   </div>`;
 }
 
-function togglePlay(btn) {
-  const card = btn.closest(".dua-card");
-  const wrap = card.querySelector(".progress-wrap");
-  const bar = card.querySelector(".progress-bar");
+function togglePlay(btn, duaId) {
+  const wrap = btn.closest(".dua-card").querySelector(".progress-wrap");
+
+  // agar already bol raha hai, toh rok do
   if (btn.classList.contains("playing")) {
+    window.speechSynthesis.cancel();
     btn.classList.remove("playing");
     btn.textContent = "▶";
     wrap.style.display = "none";
-    bar.style.width = "0%";
-    if (btn._timer) clearInterval(btn._timer);
     return;
   }
-  // stop any other playing card
+
+  // koi aur dua bol rahi ho toh use pehle rok do
+  window.speechSynthesis.cancel();
   document.querySelectorAll(".play-btn.playing").forEach((b) => {
-    if (b !== btn) togglePlay(b);
+    b.classList.remove("playing");
+    b.textContent = "▶";
   });
+
+  if (!("speechSynthesis" in window)) {
+    alert("Maaf kijiye, iss browser mein awaaz sunne ka feature support nahi hai.");
+    return;
+  }
+
+  const dua = allDuasFlat().find((d) => d.id === duaId);
+  if (!dua) return;
+
   btn.classList.add("playing");
   btn.textContent = "❚❚";
   wrap.style.display = "block";
-  let p = 0;
-  btn._timer = setInterval(() => {
-    p += 2;
-    bar.style.width = p + "%";
-    if (p >= 100) {
-      clearInterval(btn._timer);
-      btn.classList.remove("playing");
-      btn.textContent = "▶";
-      wrap.style.display = "none";
-      bar.style.width = "0%";
-    }
-  }, 80);
+  wrap.querySelector(".progress-bar").style.width = "100%";
+
+  const utterance = new SpeechSynthesisUtterance(dua.ar);
+  utterance.lang = "ar-SA";
+  utterance.rate = 0.8;
+
+  utterance.onend = () => {
+    btn.classList.remove("playing");
+    btn.textContent = "▶";
+    wrap.style.display = "none";
+  };
+  utterance.onerror = () => {
+    btn.classList.remove("playing");
+    btn.textContent = "▶";
+    wrap.style.display = "none";
+  };
+
+  window.speechSynthesis.speak(utterance);
 }
 
 function toggleShare(btn) {
