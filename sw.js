@@ -1,4 +1,4 @@
-const CACHE_NAME = "roz-ki-dua-v12";
+const CACHE_NAME = "roz-ki-dua-v13";
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
