@@ -99,7 +99,6 @@ let state = {
   selectedSurah: null,
   savedIds: JSON.parse(localStorage.getItem("roz_saved") || "{}"),
   likedIds: JSON.parse(localStorage.getItem("roz_liked") || "{}"),
-  silsila: parseInt(localStorage.getItem("roz_silsila") || "1", 10),
 };
 
 function saveState() {
