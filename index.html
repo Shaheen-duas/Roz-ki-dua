@@ -44,6 +44,7 @@
   }
   .btn-info.active { background: rgba(201,161,90,0.15); color:#E9C97C; }
   .eyebrow { font-family:'Fraunces',serif; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:#C9A15A; }
+  .hijri-date { font-size:11px; color:#5E6C77; margin-top:2px; }
   .title { font-family:'Fraunces',serif; font-size:26px; font-weight:600; color:#FDFBF6; margin-top:4px; }
   .subtitle { font-size:13px; color:#93A5B1; margin-top:2px; }
   .hint { font-size:11px; color:#7B8C99; margin-top:6px; }
@@ -148,7 +149,8 @@
   .share-wa { cursor:pointer; border:none; border-radius:20px; padding:6px 14px; font-size:11px; font-weight:600; background:#25D366; color:#0e1a24; }
   .share-img { cursor:pointer; border:1px solid rgba(201,161,90,0.4); border-radius:20px; padding:6px 14px; font-size:11px; font-weight:600; background:transparent; color:#C9A15A; }
 
-  .bottom-nav { display:flex; justify-content:space-around; padding:16px 10px 22px; margin-top:8px; border-top:1px solid rgba(255,255,255,0.06); }
+  .bottom-nav { display:flex; justify-content:space-between; gap:4px; padding:16px 8px 22px; margin-top:8px; border-top:1px solid rgba(255,255,255,0.06); overflow-x:auto; }
+  .nav-btn { flex-shrink:0; }
   .nav-btn { cursor:pointer; border:none; background:transparent; font-size:11px; color:#5E6C77; font-weight:600; }
   .nav-btn.active { color:#E9C97C; }
 
@@ -179,6 +181,16 @@
 
   .ilaj-intro { font-size:13px; color:#93A5B1; margin-bottom:16px; line-height:1.6; }
   .ilaj-cat-header { font-family:'Fraunces',serif; font-size:20px; color:#FDFBF6; margin-bottom:14px; }
+
+  .namaz-wrap { display:flex; flex-direction:column; align-items:center; padding-top:6px; }
+  .namaz-status { text-align:center; font-size:13px; color:#93A5B1; margin-bottom:20px; line-height:1.6; }
+  .namaz-enable-btn { cursor:pointer; border:none; border-radius:24px; padding:12px 32px; font-size:13px; font-weight:700; background:#C9A15A; color:#1B2A3A; }
+  .namaz-list { width:100%; }
+  .namaz-row { display:flex; justify-content:space-between; align-items:center; background:#FDFBF6; border-radius:14px; padding:14px 18px; margin-bottom:8px; }
+  .namaz-name { font-weight:700; color:#1B2A3A; font-size:14px; }
+  .namaz-rakat { font-size:11px; color:#93866A; margin-top:2px; }
+  .namaz-time { font-family:'Fraunces',serif; font-size:16px; color:#7C6A46; }
+  .namaz-loc-note { font-size:11px; color:#5E6C77; text-align:center; margin-top:14px; }
   .surah-back-row { color:#C9A15A; font-size:13px; font-weight:600; margin-bottom:14px; cursor:pointer; }
   .dua-tag-row { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; }
 </style>
@@ -199,6 +211,7 @@
     <div class="header-row">
       <div>
         <div class="eyebrow" id="dateStr"></div>
+        <div class="hijri-date" id="hijriDateStr"></div>
       </div>
       <div class="badges">
         <button class="btn-outline" id="jhalakBtn" onclick="nextDay()">Kal ki jhalak →</button>
@@ -266,6 +279,7 @@
     <button class="nav-btn" id="navSurah" onclick="setView('surah')">📖 Surah</button>
     <button class="nav-btn" id="navTasbih" onclick="setView('tasbih')">📿 Tasbih</button>
     <button class="nav-btn" id="navIlaj" onclick="setView('ilaj')">🌙 Ilaj</button>
+    <button class="nav-btn" id="navNamaz" onclick="setView('namaz')">🕌 Namaz</button>
     <button class="nav-btn" id="navSaved" onclick="setView('saved')">📑 Mehfooz <span id="savedCount"></span></button>
   </div>
 

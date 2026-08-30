@@ -216,6 +216,9 @@ let state = {
   tasbihId: localStorage.getItem("roz_tasbih_current") || "subhanallah",
   tasbihCounts: JSON.parse(localStorage.getItem("roz_tasbih_counts") || "{}"),
   langPref: localStorage.getItem("roz_lang_pref") || "hi",
+  namazTimings: null,
+  namazLoading: false,
+  namazError: null,
 };
 
 function shareApp() {
@@ -622,6 +625,109 @@ function backToIlajList() {
   renderMainContent();
 }
 
+// ---------- Namaz ke Waqt ----------
+function requestNamazTimes() {
+  state.namazError = null;
+  state.namazLoading = true;
+  render();
+
+  if (!navigator.geolocation) {
+    state.namazLoading = false;
+    state.namazError = "Is browser mein location support nahi hai.";
+    render();
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      localStorage.setItem("roz_namaz_lat", lat);
+      localStorage.setItem("roz_namaz_lon", lon);
+      fetchNamazTimes(lat, lon);
+    },
+    () => {
+      state.namazLoading = false;
+      state.namazError = "Location access nahi mil paayi. Settings mein jaakar location permission on karein.";
+      render();
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+function fetchNamazTimes(lat, lon) {
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const cacheKey = "roz_namaz_cache";
+  const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
+  if (cached && cached.date === todayKey && cached.lat === lat && cached.lon === lon) {
+    state.namazLoading = false;
+    state.namazTimings = cached.timings;
+    render();
+    return;
+  }
+
+  fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=3`)
+    .then((res) => res.json())
+    .then((data) => {
+      state.namazLoading = false;
+      if (data && data.data && data.data.timings) {
+        state.namazTimings = data.data.timings;
+        localStorage.setItem(cacheKey, JSON.stringify({ date: todayKey, lat, lon, timings: data.data.timings }));
+      } else {
+        state.namazError = "Namaz ke waqt nahi mil paaye, dobara koshish karein.";
+      }
+      render();
+    })
+    .catch(() => {
+      state.namazLoading = false;
+      state.namazError = "Internet connection check karein aur dobara koshish karein.";
+      render();
+    });
+}
+
+function renderNamazView() {
+  if (!state.namazTimings) {
+    return `
+      <div class="namaz-wrap">
+        <div class="namaz-status">
+          ${state.namazLoading ? "Namaz ke waqt nikaale jaa rahe hain…" : (state.namazError || "Apni location ke hisaab se aaj ki namaz ke waqt dekhne ke liye location ki ijazat dein.")}
+        </div>
+        <button class="namaz-enable-btn" onclick="requestNamazTimes()" ${state.namazLoading ? "disabled" : ""}>Namaz ke Waqt Dekhein</button>
+      </div>
+    `;
+  }
+
+  const t = state.namazTimings;
+  const rows = [
+    { name: "Fajr", time: t.Fajr, rakat: "2 Sunnat + 2 Farz" },
+    { name: "Sunrise", time: t.Sunrise, rakat: null },
+    { name: "Zuhr", time: t.Dhuhr, rakat: "4 Sunnat + 4 Farz + 2 Sunnat + 2 Nafl" },
+    { name: "Asr", time: t.Asr, rakat: "4 Sunnat + 4 Farz" },
+    { name: "Maghrib", time: t.Maghrib, rakat: "3 Farz + 2 Sunnat + 2 Nafl" },
+    { name: "Isha", time: t.Isha, rakat: "4 Sunnat + 4 Farz + 2 Sunnat + 2 Nafl + 3 Wajib + 2 Nafl" },
+  ];
+
+  return `
+    <div class="namaz-wrap">
+      <div class="namaz-list">
+        ${rows
+          .map(
+            (r) => `
+          <div class="namaz-row">
+            <div>
+              <div class="namaz-name">${r.name}</div>
+              ${r.rakat ? `<div class="namaz-rakat">${r.rakat}</div>` : ""}
+            </div>
+            <span class="namaz-time">${r.time}</span>
+          </div>`
+          )
+          .join("")}
+      </div>
+      <div class="namaz-loc-note">Aapki current location ke hisaab se (Muslim World League method)<br>Rakaton ki tadaad Hanafi tareeqe ke mutaabiq hai</div>
+    </div>
+  `;
+}
+
 function renderIlajView() {
   if (!state.selectedIlaj) {
     return `
@@ -705,10 +811,20 @@ function toggleAyahPlay(btn, audioUrl) {
 }
 
 // ---------- main render ----------
+function getHijriDateStr(dateObj) {
+  try {
+    return new Intl.DateTimeFormat("en-TN-u-ca-islamic", { day: "numeric", month: "long", year: "numeric" }).format(dateObj);
+  } catch (e) {
+    return "";
+  }
+}
+
 function render() {
   // date
   const dateObj = new Date(Date.now() + state.dayOffset * 86400000);
   document.getElementById("dateStr").textContent = dateObj.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+  const hijriEl = document.getElementById("hijriDateStr");
+  if (hijriEl) hijriEl.textContent = getHijriDateStr(dateObj);
 
   // nav active states
   document.getElementById("navHome").classList.toggle("active", state.view === "home");
@@ -717,6 +833,7 @@ function render() {
   document.getElementById("navSurah").classList.toggle("active", state.view === "surah");
   document.getElementById("navTasbih").classList.toggle("active", state.view === "tasbih");
   document.getElementById("navIlaj").classList.toggle("active", state.view === "ilaj");
+  document.getElementById("navNamaz").classList.toggle("active", state.view === "namaz");
   document.getElementById("aboutBtn").classList.toggle("active", state.view === "about");
   const langBtnHi = document.getElementById("langBtnHi");
   const langBtnEn = document.getElementById("langBtnEn");
@@ -754,6 +871,7 @@ function render() {
     state.view === "surah" ? "Surah" :
     state.view === "tasbih" ? "📿 Tasbih" :
     state.view === "ilaj" ? (state.selectedIlaj ? "Rohani Ilaj" : "🌙 Rohani Ilaj") :
+    state.view === "namaz" ? "🕌 Namaz ke Waqt" :
     state.view === "saved" ? "Roz ki Dua" : "Aaj ki Duayein";
 
   document.getElementById("homeSubtitle").style.display = isHome ? "block" : "none";
@@ -790,6 +908,10 @@ function renderMainContent() {
   }
   if (state.view === "ilaj") {
     container.innerHTML = renderIlajView();
+    return;
+  }
+  if (state.view === "namaz") {
+    container.innerHTML = renderNamazView();
     return;
   }
   if (state.view === "search") {
@@ -916,6 +1038,14 @@ if (localStorage.getItem("roz_lang_pref")) {
 if (getReminderSettings().enabled && "Notification" in window && Notification.permission === "granted") {
   scheduleNextReminder();
 }
+// Auto-load cached namaz timings for today if available, without prompting location again
+(() => {
+  const cached = JSON.parse(localStorage.getItem("roz_namaz_cache") || "null");
+  const todayKey = new Date().toISOString().slice(0, 10);
+  if (cached && cached.date === todayKey) {
+    state.namazTimings = cached.timings;
+  }
+})();
 render();
 
 // register service worker for offline support
