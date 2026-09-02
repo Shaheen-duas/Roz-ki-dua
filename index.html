@@ -195,7 +195,22 @@
   .namaz-time { font-family:'Fraunces',serif; font-size:16px; color:#7C6A46; }
   .namaz-loc-note { font-size:11px; color:#5E6C77; text-align:center; margin-top:14px; }
   .surah-back-row { color:#C9A15A; font-size:13px; font-weight:600; margin-bottom:14px; cursor:pointer; }
-  .dua-tag-row { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; }
+  .dua-tag-row { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; }  .qibla-box { background:#1B2A3A; border-radius:20px 20px 0 0; padding:24px 20px 30px; width:100%; max-width:480px; text-align:center; }
+  .qibla-compass-wrap { display:flex; justify-content:center; padding:20px 0; }
+  .qibla-compass {
+    width:220px; height:220px; border-radius:50%; position:relative;
+    background: radial-gradient(circle, #24384a 0%, #16222e 100%);
+    border:2px solid rgba(201,161,90,0.4);
+    display:flex; align-items:center; justify-content:center;
+    transition: transform 0.15s ease-out;
+  }
+  .qibla-compass::before {
+    content:"N"; position:absolute; top:10px; left:50%; transform:translateX(-50%);
+    color:#93A5B1; font-size:12px; font-weight:700;
+  }
+  .qibla-needle { font-size:44px; transition: transform 0.15s ease-out; }
+  .qibla-status { color:#C9A15A; font-size:13px; font-weight:600; margin-bottom:6px; }
+  .qibla-hint { color:#7B8C99; font-size:11px; margin-bottom:18px; padding:0 10px; }
 </style>
 </head>
 <body>
@@ -215,6 +230,7 @@
       <div>
         <div class="eyebrow" id="dateStr"></div>
         <div class="hijri-date" id="hijriDateStr"></div>
+        <div class="silsila" id="silsilaBadge"></div>
       </div>
       <div class="badges">
         <button class="btn-outline" id="jhalakBtn" onclick="nextDay()">Kal ki jhalak →</button>
@@ -300,6 +316,19 @@
         </button>
       </div>
       <button class="share-modal-cancel" onclick="closeShareModal()">Cancel</button>
+    </div>
+  </div>
+  <div class="share-modal-overlay hidden" id="qiblaModal" onclick="if(event.target===this) closeQiblaModal()">
+    <div class="qibla-box">
+      <div class="share-modal-title">Qibla Direction</div>
+      <div class="qibla-compass-wrap">
+        <div class="qibla-compass" id="qiblaCompassRing">
+          <div class="qibla-needle" id="qiblaNeedle">🕋</div>
+        </div>
+      </div>
+      <div class="qibla-status" id="qiblaStatus">Compass shuru ho raha hai…</div>
+      <div class="qibla-hint">Phone ko seedha rakh kar ghumaayein — Kaaba ka icon Qibla ki taraf ishaara karega</div>
+      <button class="share-modal-cancel" onclick="closeQiblaModal()">Band Karein</button>
     </div>
   </div>
 
