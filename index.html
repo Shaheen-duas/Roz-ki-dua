@@ -12,9 +12,23 @@
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin:0; padding:0; }
+  :root {
+    --bg-outer-1: #24384a; --bg-outer-2: #16222e; --bg-outer-3: #0e1a24;
+    --bg-app: #0e1a24;
+    --text-muted: #93A5B1;
+    --nav-color: #5E6C77;
+    --header-border: rgba(255,255,255,0.08);
+  }
+  #app.light-theme {
+    --bg-outer-1: #fdf6e8; --bg-outer-2: #f3ead4; --bg-outer-3: #ece0c4;
+    --bg-app: #FBF4E4;
+    --text-muted: #7C6A46;
+    --nav-color: #93866A;
+    --header-border: rgba(0,0,0,0.08);
+  }
   body {
     font-family: 'Inter', -apple-system, sans-serif;
-    background: radial-gradient(circle at 50% -10%, #24384a 0%, #16222e 45%, #0e1a24 100%);
+    background: radial-gradient(circle at 50% -10%, var(--bg-outer-1) 0%, var(--bg-outer-2) 45%, var(--bg-outer-3) 100%);
     min-height: 100vh;
     display: flex;
     align-items: flex-start;
@@ -25,14 +39,14 @@
     width: 100%;
     max-width: 480px;
     min-height: 100vh;
-    background: #0e1a24;
+    background: var(--bg-app);
     position: relative;
     overflow-x: hidden;
   }
   .header { padding: 18px 24px 4px; }
   .header-row { display:flex; justify-content:space-between; align-items:center; }
   .badges { display:flex; gap:8px; align-items:center; }
-  .silsila { display:flex; align-items:center; gap:4px; font-size:11px; color:#93A5B1; }
+  .silsila { display:flex; align-items:center; gap:4px; font-size:11px; color:var(--text-muted); }
   .btn-outline {
     cursor:pointer; border:1px solid rgba(201,161,90,0.4); background:transparent;
     color:#C9A15A; font-size:10px; font-weight:600; border-radius:20px; padding:4px 10px;
@@ -133,6 +147,12 @@
   .ramadan-banner { background:linear-gradient(135deg,#2a1a3a 0%,#1B2A3A 100%); border-radius:18px; padding:16px 18px; margin-bottom:14px; border:1px solid rgba(201,161,90,0.35); text-align:center; }
   .ramadan-title { font-size:15px; font-weight:700; color:#E9C97C; margin-bottom:4px; }
   .ramadan-times { font-size:12px; color:#C9A15A; }
+  .asma-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
+  .asma-card { background:#FDFBF6; border-radius:14px; padding:14px 10px; text-align:center; position:relative; }
+  .asma-num { position:absolute; top:8px; left:10px; font-size:10px; color:#93866A; font-weight:700; }
+  .asma-ar { font-family:'Amiri',serif; font-size:22px; color:#1B2A3A; margin:10px 0 4px; }
+  .asma-name { font-size:12px; font-weight:700; color:#7C6A46; margin-bottom:4px; }
+  .asma-meaning { font-size:11px; color:#5B6B78; line-height:1.4; }
   .dua-top { display:flex; justify-content:space-between; align-items:center; }
   .dua-tagwrap { margin-top:8px; }
   .dua-tag { font-size:10px; font-weight:700; letter-spacing:.06em; color:#7C6A46; background:#F1E9D5; padding:3px 9px; border-radius:20px; }
@@ -161,7 +181,7 @@
 
   .bottom-nav { display:flex; justify-content:space-between; gap:4px; padding:10px 8px 14px; margin-top:4px; border-bottom:1px solid rgba(255,255,255,0.06); overflow-x:auto; }
   .nav-btn { flex-shrink:0; }
-  .nav-btn { cursor:pointer; border:none; background:transparent; font-size:11px; color:#5E6C77; font-weight:600; }
+  .nav-btn { cursor:pointer; border:none; background:transparent; font-size:11px; color:var(--nav-color); font-weight:600; }
   .nav-btn.active { color:#E9C97C; }
 
   .onboarding { position:fixed; inset:0; background:rgba(10,16,22,0.96); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 30px; text-align:center; z-index:50; max-width:480px; margin:0 auto; }
@@ -241,6 +261,7 @@
       </div>
       <div class="badges">
         <button class="btn-outline" id="jhalakBtn" onclick="nextDay()">Kal ki jhalak →</button>
+        <button class="btn-info" id="themeToggleBtn" onclick="toggleTheme()">🌙</button>
         <button class="btn-info" id="shareAppBtn" onclick="shareApp()">📤</button>
         <button class="btn-info" id="aboutBtn" onclick="setView('about')">ℹ️</button>
       </div>
@@ -259,6 +280,7 @@
     <button class="nav-btn" id="navTasbih" onclick="setView('tasbih')">📿 Tasbih</button>
     <button class="nav-btn" id="navIlaj" onclick="setView('ilaj')">🌙 Ilaj</button>
     <button class="nav-btn" id="navNamaz" onclick="setView('namaz')">🕌 Namaz</button>
+    <button class="nav-btn" id="navAsma" onclick="setView('asma')">✨ 99 Naam</button>
     <button class="nav-btn" id="navSaved" onclick="setView('saved')">📑 Mehfooz <span id="savedCount"></span></button>
   </div>
 
