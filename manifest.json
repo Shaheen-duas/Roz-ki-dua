@@ -1,7 +1,7 @@
 {
   "name": "Roz ki Dua",
   "short_name": "Roz ki Dua",
-  "description": "Har din Quran se teen naye duayein — subah, shaam, aur raat ke liye",
+  "description": "Har din Quran se paanch naye duayein, roz ke liye",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0e1a24",
